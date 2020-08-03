@@ -96,7 +96,7 @@ $(kernel_img): kernel bootloader
 	cp ../rboot/target/x86_64-unknown-uefi/release/rboot.efi $(ESP)/EFI/Boot/BootX64.efi
 	cp rboot.conf $(ESP)/EFI/Boot/rboot.conf
 ifeq ($(linux), 1)
-	cp ../prebuilt/linux/x86_64.img $(ESP)/EFI/zCore/fuchsia.zbi
+	-mv ../x86_64.img $(ESP)/EFI/zCore/fuchsia.zbi
 else ifeq ($(user), 1)
 	make -C ../zircon-user
 	cp ../zircon-user/target/zcore.zbi $(ESP)/EFI/zCore/fuchsia.zbi
