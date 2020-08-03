@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+       	{
+			"name": "k",
+			"type": "cppdbg",
+			"request": "launch",
+			"miDebuggerServerAddress": "127.0.0.1:1234",
+			"program": "${workspaceFolder}/zCore/target/x86_64/debug/zcore",
+			"args": [],
+			"stopAtEntry": true,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false,
+			"logging": {
+				"engineLogging": false
+			},
+			// "preLaunchTask": "make",
+			// "postDebugTask": "killqemu",
+			"MIMode": "gdb",
+		}
+    ]
+}

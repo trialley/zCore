@@ -1,3 +1,30 @@
+make: *** No rule to make target 'debug'.  Stop.
+root@ubuntu-vm:~/Desktop/zCore# cd zCore && make debug mode=release accel=1 linux=1
+echo Building zCore kenel
+Building zCore kenel
+cargo build -Z build-std=core,alloc --target x86_64.json --release --features zircon
+   Compiling kernel-hal-bare v0.1.0 (/root/Desktop/zCore/kernel-hal-bare)
+   Compiling zcore v0.1.0 (/root/Desktop/zCore/zCore)
+warning: Linking two modules of different data layouts: '' is 'e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128' whereas 'zcore.dxsimi4h-cgu.3' is 'e-m:e-i64:64-f80:128-n8:16:32:64-S128'
+
+
+warning: 1 warning emitted
+
+    Finished release [optimized] target(s) in 17.88s
+cd ../rboot && make build
+make[1]: Entering directory '/root/Desktop/zCore/rboot'
+cargo build -Z build-std=core,alloc --target x86_64-unknown-uefi --release
+    Finished release [optimized] target(s) in 0.04s
+make[1]: Leaving directory '/root/Desktop/zCore/rboot'
+mkdir -p target/x86_64/release/esp/EFI/zCore target/x86_64/release/esp/EFI/Boot
+cp ../rboot/target/x86_64-unknown-uefi/release/rboot.efi target/x86_64/release/esp/EFI/Boot/BootX64.efi
+cp rboot.conf target/x86_64/release/esp/EFI/Boot/rboot.conf
+cp ../prebuilt/zircon/x64/bringup.zbi target/x86_64/release/esp/EFI/zCore/fuchsia.zbi
+cp target/x86_64/release/zcore target/x86_64/release/esp/EFI/zCore/zcore.elf
+qemu-system-x86_64 -smp 1 -machine q35 -cpu Haswell,+smap,-check,-fsgsbase -drive if=pflash,format=raw,readonly,file=../rboot/OVMF.fd -drive format=raw,file=fat:rw:target/x86_64/release/esp -drive format=qcow2,file=target/x86_64/release/disk.qcow2,id=disk,if=none -device ich9-ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0 -serial mon:stdio -m 4G -nic none -device isa-debug-exit,iobase=0xf4,iosize=0x04 -display none -nographic -s -S
+qemu-system-x86_64: -device ide-drive,drive=disk,bus=ahci.0: warning: 'ide-drive' is deprecated, please use 'ide-hd' or 'ide-cd' instead
+
+
 # zCore
 
 [![CI](https://github.com/rcore-os/zCore/workflows/CI/badge.svg?branch=master)](https://github.com/rcore-os/zCore/actions)

@@ -3,5 +3,5 @@
 **/*.rs.bk
 Cargo.lock
 /rootfs
-/prebuilt/linux/alpine*
+# /prebuilt/linux/alpine*
 .idea
