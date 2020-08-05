@@ -3,9 +3,41 @@
 //! - select4
 //! - poll, ppoll
 //! - epoll: create, ctl, wait
+#![allow(dead_code)]
+
+
+use core::mem::size_of;
+use alloc::boxed::Box;
+use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll};
+
+
+
 
 use super::*;
-use linux_object::fs::vfs::{FileType, Metadata};
+// use linux_object::fs::vfs::{FileType, Metadata};
+bitflags! {
+    pub struct PollEvents: u16 {
+        /// There is data to read.
+        const IN = 0x0001;
+        /// Writing is now possible.
+        const OUT = 0x0004;
+        /// Error condition (return only)
+        const ERR = 0x0008;
+        /// Hang up (return only)
+        const HUP = 0x0010;
+        /// Invalid request: fd not open (return only)
+        const INVAL = 0x0020;
+    }
+}
+const FD_PER_ITEM: usize = 8 * size_of::<u32>();
+const MAX_FDSET_SIZE: usize = 1024 / FD_PER_ITEM;
+pub struct PollFd {
+    fd: u32,
+    events: PollEvents,
+    revents: PollEvents,
+}
 impl Syscall<'_> {
 
     pub async fn sys_poll(
@@ -14,7 +46,7 @@ impl Syscall<'_> {
         nfds: usize,
         timeout_msecs: usize,
     ) -> SysResult {
-        let proc = self.process();
+        let proc = self.linux_process();
         if !proc.pid.is_init() {
             // we trust pid 0 process
             info!(

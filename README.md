@@ -38,15 +38,71 @@ Reimplement [Zircon][zircon] microkernel in safe Rust as a userspace program!
 🚧 Working In Progress
 
 - 2020.04.16: Zircon console is working on zCore! 🎉
+- 2020.08.10: Linux program is working in zCore on  bare-metal! 🎉
 
-## Getting started
+## Environments：
+### Rust toolchain 
+```bash
+# import USTC rustup mirror
+echo "export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static" >> ~/.bashrc
+echo "export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup" >> ~/.bashrc
 
-Environments：
+# apply USTC mirror
+source ~/.bashrc
 
-* [Rust toolchain](http://rustup.rs)
-* [QEMU](https://www.qemu.org)
-* [Git LFS](https://git-lfs.github.com)
+# install
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
+# apply env
+source ~/.cargo/env
+
+
+# install nightly-2020-06-04
+rustup toolchain install nightly-2020-06-04
+
+
+# apply USTC cargo mirror
+tee $HOME/.cargo/config <<-'EOF'
+[source.crates-io]
+registry = "https://github.com/rust-lang/crates.io-index"
+replace-with = 'ustc'
+[source.ustc]
+registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+EOF
+```
+### qemu
+must use qemu-5.0
+```bash
+wget https://download.qemu.org/qemu-5.1.0-rc2.tar.xz
+tar xvJf qemu-5.1.0-rc2.tar.xz
+cd qemu-5.1.0-rc2
+./configure
+make
+make install
+```
+
+
+## Getting started(linux)
+```sh
+git clone https://github.com/rcore-os/zCore --recursive
+
+# For users in China, there's a mirror you can try:
+# git clone https://github.com.cnpmjs.org/rcore-os/zCore --recursive
+
+cd zCore
+git lfs pull
+
+# build fs img
+todo
+# build zCore-linux
+
+# run zCore-linux
+make debug mode=debug NODE=debug linux=1 -C zCore
+```
+
+
+
+## Getting started(old)
 Clone repo and pull prebuilt fuchsia images:
 
 ```sh
