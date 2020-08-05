@@ -1,0 +1,3 @@
+[submodule "libc-test"]
+	path = libc-test
+	url = https://github.com/rcore-os/libc-test
