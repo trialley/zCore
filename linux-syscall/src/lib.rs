@@ -212,6 +212,10 @@ impl Syscall<'_> {
             Sys::STAT => self.sys_stat(a0.into(), a1.into()),
             Sys::LSTAT => self.sys_lstat(a0.into(), a1.into()),
             // Sys::POLL => self.sys_poll(a0.into(), a1, a2),
+            Sys::POLL => {
+                self.sys_poll(a0.into(), a1.into(), a2.into())
+                    .await
+            }
             Sys::ACCESS => self.sys_access(a0.into(), a1),
             //            Sys::PIPE => self.sys_pipe(a0.into()),
             //            Sys::SELECT => self.sys_select(a0, a1.into(), a2.into(), a3.into(), a4.into()),
