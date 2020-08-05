@@ -47,22 +47,23 @@ impl Syscall<'_> {
         timeout_msecs: usize,
     ) -> SysResult {
         let proc = self.linux_process();
-        if !proc.pid.is_init() {
-            // we trust pid 0 process
-            info!(
-                "poll: ufds: {:?}, nfds: {}, timeout_msecs: {:#x}",
-                ufds, nfds, timeout_msecs
-            );
-        }
+        warn!("poll is not safe currently!");
+        // if !proc.pid.is_init() {
+        //     // we trust pid 0 process
+        //     info!(
+        //         "poll: ufds: {:?}, nfds: {}, timeout_msecs: {:#x}",
+        //         ufds, nfds, timeout_msecs
+        //     );
+        // }
 
         // check whether the fds is valid and is owned by this process
-        let condvars = alloc::vec![&(*TICK_ACTIVITY), &(*SOCKET_ACTIVITY)];
+        // let condvars = alloc::vec![&(*TICK_ACTIVITY), &(*SOCKET_ACTIVITY)];
 
-        let polls = ufds.read_array(nfds).unwrap();
+        let polls = ufds.read_array(nfds).unwrap();//这行代码没有修改
 
-        if !proc.pid.is_init() {
-            info!("poll: fds: {:?}", polls);
-        }
+        // if !proc.pid.is_init() {
+        info!("poll: fds: {:?}", polls);
+        // }
 
         drop(proc);
 
@@ -77,13 +78,22 @@ impl Syscall<'_> {
 
             fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
                 use PollEvents as PE;
-                let proc = self.syscall.process();
+                let proc = self.syscall.linux_process();
                 let mut events = 0;
 
                 // iterate each poll to check whether it is ready
                 for poll in self.as_mut().polls.iter_mut() {
                     poll.revents = PE::empty();
-                    if let Some(file_like) = proc.files.get(&(poll.fd as usize)) {
+                    if let file_like = proc.get_file(&(poll.fd as usize))? {//?解包
+                        /*        
+        info!("read: fd={:?}, base={:?}, len={:#x}", fd, base, len);
+        let proc = self.linux_process();
+        let file_like = proc.get_file_like(fd)?;
+        let mut buf = vec![0u8; len];
+        let len = file_like.read(&mut buf)?;
+        base.write_array(&buf[..len])?;
+        Ok(len)
+        */
                         let mut fut = Box::pin(file_like.async_poll());
                         let status = match fut.as_mut().poll(cx) {
                             Poll::Ready(Ok(ret)) => ret,
