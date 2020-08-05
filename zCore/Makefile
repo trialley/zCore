@@ -73,13 +73,16 @@ endif
 
 run: build justrun
 test: build-test justrun
-debug: build debugrun
 
-debugrun: $(QEMU_DISK)
-	$(qemu) $(qemu_opts) -s -S
+
 
 justrun: $(QEMU_DISK)
+ifeq ($(mode), debug)
+	$(qemu) -S -s $(qemu_opts)
+else
 	$(qemu) $(qemu_opts)
+endif
+
 
 build-test: build
 	cp ../prebuilt/zircon/x64/core-tests.zbi $(ESP)/EFI/zCore/fuchsia.zbi

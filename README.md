@@ -1,3 +1,5 @@
+make run mode=debug linux=1 -C zCore
+
 make: *** No rule to make target 'debug'.  Stop.
 root@ubuntu-vm:~/Desktop/zCore# cd zCore && make debug mode=release accel=1 linux=1
 echo Building zCore kenel

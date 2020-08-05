@@ -191,7 +191,32 @@ impl FileLike for File {
     fn poll(&self) -> LxResult<PollStatus> {
         self.poll()
     }
-
+    // pub fn poll(&self) -> Result<PollStatus, SysError> {
+    //     let status = match self {
+    //         FileLike::File(file) => file.poll()?,
+    //         FileLike::Socket(socket) => {
+    //             let (read, write, error) = socket.poll();
+    //             PollStatus { read, write, error }
+    //         }
+    //         FileLike::EpollInstance(_) => {
+    //             return Err(SysError::ENOSYS);
+    //         }
+    //     };
+    //     Ok(status)
+    // }
+    // pub async fn async_poll(&self) -> Result<PollStatus, SysError> {
+    //     let status = match self {
+    //         FileLike::File(file) => file.async_poll().await?,
+    //         FileLike::Socket(socket) => {
+    //             let (read, write, error) = socket.poll();
+    //             PollStatus { read, write, error }
+    //         }
+    //         FileLike::EpollInstance(_) => {
+    //             return Err(SysError::ENOSYS);
+    //         }
+    //     };
+    //     Ok(status)
+    // }
     fn ioctl(&self, request: usize, arg1: usize, _arg2: usize, _arg3: usize) -> LxResult<usize> {
         self.io_control(request as u32, arg1)
     }

@@ -5,17 +5,13 @@
 //! - epoll: create, ctl, wait
 #![allow(dead_code)]
 
-
+use alloc::vec::Vec;
 use core::mem::size_of;
-use alloc::boxed::Box;
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll};
-
-
-
-
 use super::*;
+
 // use linux_object::fs::vfs::{FileType, Metadata};
 bitflags! {
     pub struct PollEvents: u16 {
@@ -31,13 +27,14 @@ bitflags! {
         const INVAL = 0x0020;
     }
 }
-const FD_PER_ITEM: usize = 8 * size_of::<u32>();
+const FD_PER_ITEM: usize = 8 * size_of::<FileDesc>();
 const MAX_FDSET_SIZE: usize = 1024 / FD_PER_ITEM;
 pub struct PollFd {
-    fd: u32,
+    fd: FileDesc,
     events: PollEvents,
     revents: PollEvents,
 }
+
 impl Syscall<'_> {
 
     pub async fn sys_poll(
@@ -48,6 +45,10 @@ impl Syscall<'_> {
     ) -> SysResult {
         let proc = self.linux_process();
         warn!("poll is not safe currently!");
+        info!(
+            "poll: ufds: {:?}, nfds: {}, timeout_msecs: {:#x}",
+            ufds, nfds, timeout_msecs
+        );
         // if !proc.pid.is_init() {
         //     // we trust pid 0 process
         //     info!(
@@ -62,7 +63,7 @@ impl Syscall<'_> {
         let polls = ufds.read_array(nfds).unwrap();//这行代码没有修改
 
         // if !proc.pid.is_init() {
-        info!("poll: fds: {:?}", polls);
+        // info!("poll: fds: {:?}", polls);
         // }
 
         drop(proc);
@@ -76,7 +77,7 @@ impl Syscall<'_> {
         impl<'a> Future for PollFuture<'a> {
             type Output = SysResult;
 
-            fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+            fn poll(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Self::Output> {
                 use PollEvents as PE;
                 let proc = self.syscall.linux_process();
                 let mut events = 0;
@@ -84,7 +85,14 @@ impl Syscall<'_> {
                 // iterate each poll to check whether it is ready
                 for poll in self.as_mut().polls.iter_mut() {
                     poll.revents = PE::empty();
-                    if let file_like = proc.get_file(&(poll.fd as usize))? {//?解包
+                    // let file_like = match proc.get_file_like(poll.fd) {
+                    //     Ok(p) => p,
+                    //     Err(e) => {
+                    //         poll.revents |= PE::ERR;
+                    //         events += 1;
+                    //     }
+                    // };
+                    if let Ok(file_like) = proc.get_file_like(poll.fd) {//?解包
                         /*        
         info!("read: fd={:?}, base={:?}, len={:#x}", fd, base, len);
         let proc = self.linux_process();
@@ -94,11 +102,11 @@ impl Syscall<'_> {
         base.write_array(&buf[..len])?;
         Ok(len)
         */
-                        let mut fut = Box::pin(file_like.async_poll());
-                        let status = match fut.as_mut().poll(cx) {
-                            Poll::Ready(Ok(ret)) => ret,
-                            Poll::Ready(Err(err)) => return Poll::Ready(Err(err)),
-                            Poll::Pending => continue,
+                        // let mut fut = Box::pin(file_like.poll());
+                        let status = match file_like.poll() {
+                            Ok(ret) => ret,
+                            Err(err) => return Poll::Ready(Err(err)),
+                            // Poll::Pending => continue,
                         };
                         if status.error {
                             poll.revents |= PE::HUP;
